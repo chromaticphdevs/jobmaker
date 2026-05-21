@@ -9,49 +9,37 @@
     while ($r = $res->fetch_assoc()) {
         echo "id={$r['id']}  zip_url={$r['zip_url']}  zip_name={$r['zip_name']}\n";
     }
-    echo "\nMIGRATIONS_DIR constant = " . MIGRATIONS_DIR . "\n\n";
+    echo "\nMIGRATIONS_DIR = " . MIGRATIONS_DIR . "\n";
+    echo "SOURCE_UPLOADS_DIR = " . SOURCE_UPLOADS_DIR . "\n";
+    echo "PHP_OS_FAMILY = " . PHP_OS_FAMILY . "\n";
+    echo "Using CLI zip: " . (PHP_OS_FAMILY !== 'Windows' ? 'YES (/usr/bin/zip)' : 'NO (ZipArchive)') . "\n";
     echo "=========================\n\n";
 
-    echo "PHP version: " . PHP_VERSION . "\n\n";
+    // --- test zip_add_file() using our actual zip_manager functions ---
+    $test_zip  = MIGRATIONS_DIR . '/_zip_test.zip';
+    $test_file = SOURCE_UPLOADS_DIR . '/' . ltrim(scandir(SOURCE_UPLOADS_DIR)[2] ?? '', '/');
 
-    // ZipArchive check
-    if (class_exists('ZipArchive')) {
-        echo "[OK] ZipArchive is available\n";
+    echo "Test zip path : {$test_zip}\n";
+    echo "Test file path: {$test_file}\n\n";
+
+    if (!file_exists($test_file)) {
+        echo "[FAIL] No files found in SOURCE_UPLOADS_DIR: " . SOURCE_UPLOADS_DIR . "\n";
     } else {
-        echo "[FAIL] ZipArchive is NOT available\n";
-    }
+        echo "[OK] Source file found\n";
 
-    // zip extension loaded
-    if (extension_loaded('zip')) {
-        echo "[OK] zip extension is loaded\n";
-    } else {
-        echo "[FAIL] zip extension is NOT loaded\n";
-    }
+        $ok = zip_add_file($test_zip, $test_file, basename($test_file));
 
-    // test actual file creation
-    $test_path = MIGRATIONS_DIR;
-    echo "\nAttempting to create: {$test_path}\n";
-
-    if (!is_dir(dirname($test_path))) {
-        echo "[FAIL] Directory does not exist: " . dirname($test_path) . "\n";
-    } else {
-        echo "[OK] Directory exists\n";
-
-        $zip = new ZipArchive();
-        $result = $zip->open($test_path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-
-        if ($result === TRUE) {
-            $zip->addFromString('test.txt', 'hello');
-            $zip->close();
-            echo "[OK] Zip file created successfully\n";
-            // unlink($test_path);
+        if ($ok && file_exists($test_zip)) {
+            echo "[OK] zip_add_file() succeeded\n";
+            echo "[OK] Zip exists on disk: {$test_zip}\n";
+            $size = round(filesize($test_zip) / 1024, 2);
+            echo "[OK] Size: {$size} KB\n";
+            unlink($test_zip);
             echo "[OK] Cleanup done\n";
         } else {
-            echo "[FAIL] ZipArchive::open() returned error code: {$result}\n";
+            echo "[FAIL] zip_add_file() failed — check logs/app.log\n";
         }
     }
 
-    echo "\nLoaded extensions:\n";
-    echo implode(', ', get_loaded_extensions());
     echo '</pre>';
 ?>
