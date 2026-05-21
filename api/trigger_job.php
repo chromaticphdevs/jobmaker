@@ -36,9 +36,18 @@
         $cmd = sprintf('cmd /C start /B "" "%s" "%s" --job_id=%d > NUL 2>&1', $php, $script, $job_id);
         pclose(popen($cmd, 'r'));
     } else {
-        $log = dirname(__DIR__) . '/logs/cli.log';
-        $cmd = sprintf('"%s" "%s" --job_id=%d >> %s 2>&1 &', $php, $script, $job_id, escapeshellarg($log));
-        shell_exec($cmd);
+        $log_dir = dirname(__DIR__) . '/logs';
+        if (!is_dir($log_dir)) {
+            mkdir($log_dir, 0755, true);
+        }
+        $log = $log_dir . '/cli.log';
+
+        // nohup + < /dev/null + & fully detaches the process from Apache
+        $cmd = sprintf(
+            'nohup "%s" "%s" --job_id=%d < /dev/null >> %s 2>&1 &',
+            $php, $script, $job_id, escapeshellarg($log)
+        );
+        exec($cmd);
     }
 
     echo json_encode(['success' => true, 'job_id' => $job_id]);
