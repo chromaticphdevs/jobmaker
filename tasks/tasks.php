@@ -21,7 +21,7 @@
         $database->query($updateStatusSQL);
 
         $sql = "
-            SELECT * FROM hr_time_sheets
+            SELECT * FROM transactions
                 WHERE id >= {$currentId}
                 AND id <=  {$lastId}            
         ";
