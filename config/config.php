@@ -9,7 +9,7 @@
     define('TASK_MAX_LIMIT', 100);
 
     define('SOURCE_UPLOADS_DIR', '/home/konduefk/public_html/public/uploads');
-    define('MIGRATIONS_DIR',     '/home/konduefk/filesmigrationss');
+    define('MIGRATIONS_DIR',     '/home/konduefk/filesmigrations');
 
     define('PHP_CLI', '/usr/bin/php');
 ?>
