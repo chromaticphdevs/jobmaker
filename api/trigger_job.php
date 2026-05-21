@@ -42,16 +42,30 @@
         }
         $log = $log_dir . '/cli.log';
 
-        // sanity check — can exec write anything at all?
-        exec('echo exec_works >> ' . escapeshellarg($log) . ' 2>&1');
+        // test 1: can PHP write directly to the log?
+        $php_write_ok = file_put_contents($log, "[php_write_test] ok\n", FILE_APPEND) !== false;
+
+        // test 2: can exec run anything?
+        exec('echo exec_works >> ' . escapeshellarg($log) . ' 2>&1', $out, $exec_code);
 
         // nohup + < /dev/null + & fully detaches the process from Apache
         $cmd = sprintf(
             'nohup "%s" "%s" --job_id=%d < /dev/null >> %s 2>&1 &',
             $php, $script, $job_id, escapeshellarg($log)
         );
-        write_log("trigger_job spawning: {$cmd}");
-        exec($cmd);
+        exec($cmd, $spawn_out, $spawn_code);
+
+        // return debug info so we can see what worked
+        echo json_encode([
+            'success'        => true,
+            'job_id'         => $job_id,
+            'php_write_ok'   => $php_write_ok,
+            'exec_code'      => $exec_code,
+            'spawn_code'     => $spawn_code,
+            'cmd'            => $cmd,
+            'log'            => $log,
+        ]);
+        exit;
     }
 
     echo json_encode(['success' => true, 'job_id' => $job_id]);
