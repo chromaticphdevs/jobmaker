@@ -27,17 +27,33 @@
     } else {
         echo "[OK] Source file found\n";
 
-        $ok = zip_add_file($test_zip, $test_file, basename($test_file));
+        // run the zip command manually so we can see exact output
+        $entry = basename($test_file);
+        $cmd   = sprintf(
+            'cd %s && /usr/bin/zip %s %s 2>&1',
+            escapeshellarg(SOURCE_UPLOADS_DIR),
+            escapeshellarg($test_zip),
+            escapeshellarg($entry)
+        );
+        echo "CMD: {$cmd}\n\n";
+        exec($cmd, $output, $code);
+        echo "Exit code : {$code}\n";
+        echo "Output    : " . implode("\n", $output) . "\n\n";
 
-        if ($ok && file_exists($test_zip)) {
-            echo "[OK] zip_add_file() succeeded\n";
-            echo "[OK] Zip exists on disk: {$test_zip}\n";
+        if ($code === 0 && file_exists($test_zip)) {
+            echo "[OK] Zip created successfully\n";
             $size = round(filesize($test_zip) / 1024, 2);
             echo "[OK] Size: {$size} KB\n";
             unlink($test_zip);
             echo "[OK] Cleanup done\n";
         } else {
-            echo "[FAIL] zip_add_file() failed — check logs/app.log\n";
+            echo "[FAIL] zip command failed\n";
+
+            // also check if exec is disabled
+            $disabled = explode(',', ini_get('disable_functions'));
+            $disabled = array_map('trim', $disabled);
+            echo "\ndisable_functions: " . ini_get('disable_functions') . "\n";
+            echo "exec disabled: " . (in_array('exec', $disabled) ? 'YES' : 'NO') . "\n";
         }
     }
 
