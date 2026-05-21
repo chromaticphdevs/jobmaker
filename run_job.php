@@ -30,8 +30,7 @@
     $row = $result->fetch_assoc();
 
     switch($row['job_key']) {
-        case 'attendance_list':
-        case 'attedance_list':
+        case 'transactions':
             transaction_task($row);
         break;
     }
