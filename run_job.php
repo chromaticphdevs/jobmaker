@@ -1,10 +1,17 @@
 <?php
     require_once 'loader.private.php';
-    if(!isset($_GET['job_id'])) {
-        return false;
+
+    // support both browser (?job_id=) and CLI (--job_id=)
+    if (php_sapi_name() === 'cli') {
+        $opts  = getopt('', ['job_id:']);
+        $jobId = $opts['job_id'] ?? null;
+    } else {
+        $jobId = $_GET['job_id'] ?? null;
     }
 
-    $jobId = $_GET['job_id'];
+    if (!$jobId) {
+        exit('no job_id provided');
+    }
 
     $database = connectDB();
 
@@ -24,6 +31,7 @@
 
     switch($row['job_key']) {
         case 'attendance_list':
+        case 'attedance_list':
             transaction_task($row);
         break;
     }
