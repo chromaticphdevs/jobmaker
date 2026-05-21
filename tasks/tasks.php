@@ -14,6 +14,11 @@
 
         $database->query("UPDATE jobs SET status = 'in-progress' WHERE id = '{$job_id}'");
 
+        // seed the zip with a token file so the archive always exists on disk
+        if (!file_exists($zip_path)) {
+            zip_add_content($zip_path, 'token.txt', $job_record['token']);
+        }
+
         // use > not >= so a resumed job doesn't reprocess the last completed record
         $result = $database->query("
             SELECT * FROM transactions
@@ -96,6 +101,11 @@
         }
 
         $database->query("UPDATE jobs SET status = 'in-progress' WHERE id = '{$job_id}'");
+
+        // seed the zip with a token file so the archive always exists on disk
+        if (!file_exists($zip_path)) {
+            zip_add_content($zip_path, 'token.txt', $job_record['token']);
+        }
 
         // use > not >= so a resumed job doesn't reprocess the last completed record
         $result = $database->query("

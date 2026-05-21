@@ -93,6 +93,40 @@
     }
 
     /**
+     * Write a string as a named file inside the zip.
+     * Used to add token.txt or any metadata file to every archive.
+     */
+    function zip_add_content($zip_path, $filename, $content) {
+        $dir = dirname($zip_path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        if (_zip_use_cli()) {
+            $tmp = sys_get_temp_dir() . '/' . $filename;
+            file_put_contents($tmp, $content);
+            $cmd = sprintf('/usr/bin/zip -j %s %s 2>&1', escapeshellarg($zip_path), escapeshellarg($tmp));
+            exec($cmd, $output, $code);
+            unlink($tmp);
+
+            if ($code !== 0) {
+                write_log("zip_add_content: CLI failed (code {$code}): " . implode(' ', $output));
+                return false;
+            }
+            return true;
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($zip_path, ZipArchive::CREATE) !== TRUE) {
+            write_log("zip_add_content: could not open {$zip_path}");
+            return false;
+        }
+        $zip->addFromString($filename, $content);
+        $zip->close();
+        return true;
+    }
+
+    /**
      * Add multiple files in one zip exec call — far faster than calling zip_add_file() per file.
      * $relative_paths is an array of paths relative to SOURCE_UPLOADS_DIR.
      */
