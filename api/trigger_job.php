@@ -42,11 +42,15 @@
         }
         $log = $log_dir . '/cli.log';
 
+        // sanity check — can exec write anything at all?
+        exec('echo exec_works >> ' . escapeshellarg($log) . ' 2>&1');
+
         // nohup + < /dev/null + & fully detaches the process from Apache
         $cmd = sprintf(
             'nohup "%s" "%s" --job_id=%d < /dev/null >> %s 2>&1 &',
             $php, $script, $job_id, escapeshellarg($log)
         );
+        write_log("trigger_job spawning: {$cmd}");
         exec($cmd);
     }
 
