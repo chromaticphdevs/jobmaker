@@ -1,11 +1,8 @@
 <?php
-    require_once 'core/database.php';
-    require_once 'core/conn.php';
-    require_once 'core/job_maker.php';
-
+    require_once 'loader.private.php';
     $tableName = $_GET['table_name'];
     $jobKey = $_GET['job_key'];
-    $limit = $_GET['limit'];
+    $limit = $_GET['limit'] ?? LIMIT;
 
 
     //tables
@@ -13,21 +10,22 @@
     
     $result = get_recent_job_by_key($jobKey);
 
-    if(!$result) {
+    if($result) {
         $lastId = $result['last_id'];
     } else {
         $lastId = 0;
     }
 
+    $limit = LIMIT;
     $result = $database->query(
         "SELECT * FROM {$tableName}
             WHERE id > {$lastId}
             ORDER BY id asc
-            LIMIT 500"
+            LIMIT {$limit}"
     );
 
     $tableItems = [];
-
+    
     if($result->num_rows > 0) {
          while($row = $result->fetch_assoc()) {
             $tableItems[] = $row;
@@ -42,9 +40,8 @@
     $lastId = end($tableItems)['id'];
     $firstId = $tableItems[0]['id'];
 
-    $date = date('Y-m-d h:i:s');
-    $token = strtotime($date);
+    $token = round(microtime(true) * 1000);
     $zipName = $tableName.'_'.$token.'.zip';
     $zipURL  =  '/home/konduefk/migration_digital_ocean/';
-    job_maker($token, $jobKey, $tableName, $firstId, $lastId, $zipName, $zipURL);
+    job_maker($token, $jobKey, $tableName, $firstId, $lastId, count($tableItems), $zipName, $zipURL);
 ?>

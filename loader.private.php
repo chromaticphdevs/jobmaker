@@ -1,6 +1,6 @@
 <?php
-    require_once 'core/database.php';
-    require_once 'core/conn.php';
+    require_once 'config/config.php';
+    require_once 'config/conn.php';
     require_once 'core/job_maker.php';
-    require_once 'core/job_runner.php';
+    require_once 'tasks/tasks.php';
 ?>
