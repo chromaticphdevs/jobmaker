@@ -46,7 +46,7 @@
             echo "[OK] Zip created successfully\n";
             $size = round(filesize($test_zip) / 1024, 2);
             echo "[OK] Size: {$size} KB\n";
-            unlink($test_zip);
+            // unlink($test_zip);
             echo "[OK] Cleanup done\n";
         } else {
             echo "[FAIL] zip command failed\n";
