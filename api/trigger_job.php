@@ -64,6 +64,8 @@
             'spawn_code'     => $spawn_code,
             'cmd'            => $cmd,
             'log'            => $log,
+            'running_as'     => trim(shell_exec('whoami')),
+            'log_dir_owner'  => trim(shell_exec('ls -la /home/konduefk/robotuat/ | grep logs')),
         ]);
         exit;
     }
