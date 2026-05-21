@@ -13,6 +13,8 @@
     echo "SOURCE_UPLOADS_DIR = " . SOURCE_UPLOADS_DIR . "\n";
     echo "PHP_OS_FAMILY = " . PHP_OS_FAMILY . "\n";
     echo "Using CLI zip: " . (PHP_OS_FAMILY !== 'Windows' ? 'YES (/usr/bin/zip)' : 'NO (ZipArchive)') . "\n";
+    echo "Running as user: " . trim(shell_exec('whoami')) . "\n";
+    echo "Dir permissions: " . trim(shell_exec('ls -la /home/konduefk/ | grep filesmigrations')) . "\n";
     echo "=========================\n\n";
 
     // --- test zip_add_file() using our actual zip_manager functions ---
