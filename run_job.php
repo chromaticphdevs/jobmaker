@@ -1,5 +1,5 @@
 <?php
-    require_once 'loader.private.php';
+    require_once __DIR__ . '/loader.private.php';
 
     // support both browser (?job_id=) and CLI (--job_id=)
     if (php_sapi_name() === 'cli') {
