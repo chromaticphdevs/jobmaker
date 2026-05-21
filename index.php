@@ -20,6 +20,9 @@
     <style>
         button.run-btn { cursor: pointer; }
         button.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        a.dl-btn { margin-left: 6px; color: #1a73e8; text-decoration: none; font-weight: bold; }
+        a.dl-btn:hover { text-decoration: underline; }
+        button.reset-btn { margin-left: 6px; cursor: pointer; color: #c0392b; }
         .progress-bar-wrap { background: #ddd; border-radius: 4px; width: 120px; height: 14px; display: inline-block; vertical-align: middle; }
         .progress-bar { background: #4caf50; height: 14px; border-radius: 4px; width: 0%; transition: width 0.3s; }
     </style>
@@ -39,10 +42,13 @@
 
         <tbody id="content">
             <?php foreach($jobs as $key => $row):
-                $total   = (int) $row['total_records'];
-                $done    = (int) $row['processed_count'];
-                $percent = $total > 0 ? round(($done / $total) * 100) : 0;
-                $running = $row['status'] === 'in-progress';
+                $total    = (int) $row['total_records'];
+                $done     = (int) $row['processed_count'];
+                $percent  = $total > 0 ? round(($done / $total) * 100) : 0;
+                $status   = $row['status'];
+                $running  = $status === 'in-progress';
+                $partial  = $status === 'pending' && $done > 0;
+                $btnLabel = $running ? 'Running...' : ($partial ? 'Continue' : 'RUN');
             ?>
                 <tr id="job-row-<?php echo $row['id'] ?>">
                     <td><?php echo ++$key ?></td>
@@ -50,7 +56,7 @@
                     <td><?php echo $row['table_name'] ?></td>
                     <td><?php echo $total ?></td>
                     <td class="js-processed"><?php echo $done ?></td>
-                    <td class="js-status"><?php echo $row['status'] ?></td>
+                    <td class="js-status"><?php echo $status ?></td>
                     <td>
                         <div class="progress-bar-wrap">
                             <div class="progress-bar js-bar" style="width:<?php echo $percent ?>%"></div>
@@ -58,11 +64,19 @@
                         <span class="js-percent"><?php echo $percent ?>%</span>
                     </td>
                     <td>
-                        <button class="run-btn"
-                            data-job-id="<?php echo $row['id'] ?>"
-                            <?php echo $running ? 'disabled' : '' ?>>
-                            <?php echo $running ? 'Running...' : 'RUN' ?>
-                        </button>
+                        <?php if($status !== 'finished'): ?>
+                            <button class="run-btn"
+                                data-job-id="<?php echo $row['id'] ?>"
+                                <?php echo $running ? 'disabled' : '' ?>>
+                                <?php echo $btnLabel ?>
+                            </button>
+                            <?php if($running): ?>
+                                <button class="reset-btn" data-job-id="<?php echo $row['id'] ?>">Reset</button>
+                            <?php endif ?>
+                        <?php endif ?>
+                        <?php if($status === 'finished'): ?>
+                            <a class="dl-btn" href="api/download_zip.php?job_id=<?php echo $row['id'] ?>">Download</a>
+                        <?php endif ?>
                     </td>
                 </tr>
             <?php endforeach ?>
@@ -84,9 +98,18 @@
         const btn = row.querySelector('.run-btn');
 
         if (data.status === 'finished' || data.status === 'pending') {
+            const partial   = data.status === 'pending' && data.processed_count > 0;
             btn.disabled    = false;
-            btn.textContent = data.status === 'finished' ? 'Done' : 'RUN';
+            btn.textContent = data.status === 'finished' ? 'Done' : (partial ? 'Continue' : 'RUN');
             stopPolling(jobId);
+
+            if (data.status === 'finished' && !row.querySelector('.dl-btn')) {
+                const a = document.createElement('a');
+                a.className   = 'dl-btn';
+                a.href        = 'api/download_zip.php?job_id=' + jobId;
+                a.textContent = 'Download';
+                btn.after(a);
+            }
         } else if (data.status === 'in-progress') {
             btn.disabled    = true;
             btn.textContent = 'Running...';
@@ -134,6 +157,28 @@
             } else {
                 btn.disabled    = false;
                 btn.textContent = 'RUN';
+                alert(data.message);
+            }
+        });
+    });
+
+    document.querySelectorAll('.reset-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.dataset.jobId;
+            const form  = new FormData();
+            form.append('job_id', jobId);
+
+            const res  = await fetch('api/reset_job.php', { method: 'POST', body: form });
+            const data = await res.json();
+
+            if (data.success) {
+                const row    = document.getElementById('job-row-' + jobId);
+                row.querySelector('.js-status').textContent = 'pending';
+                const runBtn = row.querySelector('.run-btn');
+                runBtn.disabled    = false;
+                runBtn.textContent = 'Continue';
+                btn.remove();
+            } else {
                 alert(data.message);
             }
         });

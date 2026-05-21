@@ -33,5 +33,9 @@
         case 'transactions':
             transaction_task($row);
         break;
+        
+        case 'service_orders':
+            service_order_task($row);
+        break;
     }
 ?>

@@ -93,6 +93,58 @@
     }
 
     /**
+     * Add multiple files in one zip exec call — far faster than calling zip_add_file() per file.
+     * $relative_paths is an array of paths relative to SOURCE_UPLOADS_DIR.
+     */
+    function zip_add_files_batch($zip_path, array $relative_paths) {
+        if (empty($relative_paths)) return true;
+
+        $dir = dirname($zip_path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        if (_zip_use_cli()) {
+            $files = implode(' ', array_map(function($p) {
+                return escapeshellarg(ltrim($p, '/'));
+            }, $relative_paths));
+
+            $cmd = sprintf(
+                'cd %s && /usr/bin/zip %s %s 2>&1',
+                escapeshellarg(SOURCE_UPLOADS_DIR),
+                escapeshellarg($zip_path),
+                $files
+            );
+
+            exec($cmd, $output, $code);
+
+            if ($code !== 0) {
+                write_log("zip_add_files_batch: CLI failed (code {$code}): " . implode(' ', $output));
+                return false;
+            }
+
+            return true;
+        }
+
+        $zip    = new ZipArchive();
+        $result = $zip->open($zip_path, ZipArchive::CREATE);
+        if ($result !== TRUE) {
+            write_log("zip_add_files_batch: ZipArchive could not open {$zip_path} (code {$result})");
+            return false;
+        }
+
+        foreach ($relative_paths as $relative) {
+            $full = SOURCE_UPLOADS_DIR . '/' . ltrim($relative, '/');
+            if (file_exists($full)) {
+                $zip->addFile($full, $relative);
+            }
+        }
+
+        $zip->close();
+        return true;
+    }
+
+    /**
      * List all files stored inside a zip archive.
      */
     function zip_list_files($zip_path) {
