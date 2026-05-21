@@ -29,7 +29,7 @@
     }
 
     // test actual file creation
-    $test_path = dirname(__DIR__) . '/test_migration/_zip_test.zip';
+    $test_path = MIGRATIONS_DIR;
     echo "\nAttempting to create: {$test_path}\n";
 
     if (!is_dir(dirname($test_path))) {
