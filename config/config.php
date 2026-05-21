@@ -1,9 +1,9 @@
 <?php
     // Production (VPS) defaults
     define('DBHOST', 'localhost');
-    define('DBNAME', 'your_db_name');
-    define('DBUSER', 'your_db_user');
-    define('DBPASS', 'your_db_pass');
+    define('DBNAME', 'konduefk_live');
+    define('DBUSER', 'konduefk_live');
+    define('DBPASS', 'DR5mM9=#Ll_L');
 
     define('LIMIT', '50');
     define('TASK_MAX_LIMIT', 100);
